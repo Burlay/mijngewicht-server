@@ -1,0 +1,18 @@
+{application, mijngewicht_server, [
+    {description, "De RESTfull server voor de Mijn Gewicht app op Android!"},
+    {vsn, "0.0.1"},
+    {modules, []},
+    {registered, [mijngewicht_server_sup]},
+    {applications, [
+        kernel,
+        stdlib,
+        cowboy,
+        jiffy,
+        ossp_uuid,
+        epgsql
+    ]},
+    {mod, {mijngewicht_server_app, []}},
+    {env, [
+        {hostname, "www.mijngewicht.nl"}
+    ]}
+]}.
