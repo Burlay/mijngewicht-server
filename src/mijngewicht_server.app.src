@@ -9,7 +9,8 @@
         cowboy,
         jiffy,
         ossp_uuid,
-        epgsql
+        epgsql,
+        bcrypt
     ]},
     {mod, {mijngewicht_server_app, []}},
     {env, [
