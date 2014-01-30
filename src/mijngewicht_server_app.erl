@@ -13,9 +13,13 @@ start(_Type, _Args) ->
              {"/user", user_handler, []}
              ]}
     ]),
+
+  {ok, BindPort} = application:get_env(mijngewicht_server, bind_port),
+  {ok, BindAddr} = application:get_env(mijngewicht_server, bind_addr),
+  {ok, IP} = inet:parse_address(BindAddr),
   %% Name, NbAcceptors, TransOpts, ProtoOpts
   cowboy:start_http(my_http_listener, 100,
-    [{port, 8080}],
+    [{ip, IP}, {port, BindPort}],
     [{env, [{dispatch, Dispatch}]}]
   ),
   mijngewicht_server_sup:start_link().
