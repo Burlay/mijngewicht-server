@@ -36,17 +36,14 @@ hello_to_json(Req, State) ->
 from_json(Req, State) ->
   {ok, Body, _} = cowboy_req:body(Req),
   {[{<<"username">>, Username},{<<"password">>, Password}]} = jiffy:decode(Body),
-  io:format("username: ~p~npassword: ~p~n", [Username, Password]),
 
   case account:create(Username, Password) of
-    {ok, UserID} ->
-      io:format("user id: ~p~n", [UserID]),
+    {ok, UserId} ->
       {ok, Hostname} = application:get_env(mijngewicht_server, hostname),
-      {ok, _} = cowboy_req:reply(201, [{<<"Location">>, ["http://", Hostname]}], Req)
-%%    unauthorized ->
-%%      io:format("Unauthorized~n"),
-%%      {ok, _} = cowboy_req:reply(403, [], Req)
-  end,
-
-  {halt, Req, State}.
+      {ok, Req2} = cowboy_req:reply(201, [{<<"Location">>, ["http://", Hostname, "/user/", UserId]}], Req),
+      {halt, Req2, State};
+    unauthorized ->
+      {ok, Req2} = cowboy_req:reply(403, [], Req),
+      {halt, Req2, State}
+  end.
 

@@ -33,19 +33,18 @@ hello_to_json(Req, State) ->
   Body = <<"{\"session\": \"Hello World\"}">>,
   {Body, Req, State}.
 
-from_json(Req, _State) ->
+from_json(Req, State) ->
   {ok, Body, _} = cowboy_req:body(Req),
   {[{<<"username">>, Username},{<<"password">>, Password}]} = jiffy:decode(Body),
 
   case session:create(Username, Password) of
     {ok, SessionID} ->
-      io:format("session id: ~p~n", [application:get_env(mijngewicht_server, hostname)]),
       {ok, Hostname} = application:get_env(mijngewicht_server, hostname),
-      {ok, _} = cowboy_req:reply(201, [{<<"Location">>, ["http://", Hostname, "/sessions/", SessionID]}], Req);
+      Req2 = cowboy_req:set_resp_cookie("session", SessionID, [], Req),
+      {ok, Req3} = cowboy_req:reply(201, [{<<"Location">>, ["http://", Hostname, "/session/", SessionID]}], Req2),
+      {halt, Req3, State};
     unauthorized ->
-      io:format("Unauthorized~n"),
-      {ok, _} = cowboy_req:reply(403, [], Req)
-  end,
-
-  {halt, Req, _State}.
+      {ok, Req2} = cowboy_req:reply(403, [], Req),
+      {halt, Req2, State}
+  end.
 
