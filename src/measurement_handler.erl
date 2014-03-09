@@ -68,21 +68,43 @@ return_measurements(AccountId, Req, State) ->
 
 store_measurement(AccountId, Req, State) ->
   {ok, Body, _} = cowboy_req:body(Req),
+  JSON = jiffy:decode(Body),
+
+  _SQLQuery = build_query(JSON, AccountId),
+
+  {ok, _} = db:query(SQLQuery),
+
+  gcm:send_sync_signal(AccountId),
+
+  {ok, Req3} = cowboy_req:reply(201, [], Req),
+  {halt, Req3, State}.
+
+build_query(Rows, AccountId) ->
+  build_query(Rows, AccountId, []).
+
+build_query([], _, []) ->
+  [];
+build_query([], _, Acc) ->
+  ["INSERT INTO measurements (measurement_guid, weight, date_taken, updated_at, account_id) VALUES ", Acc];
+build_query([Row|Rows], AccountId, Acc) ->
   {[
       {<<"guid">>, GUID},
       {<<"weight">>, Weight},
       {<<"date_taken">>, DateTaken}
-    ]} = jiffy:decode(Body),
+    ]} = Row,
 
-  {ok, _} = db:query([
-      "INSERT INTO measurements (measurement_guid, weight, date_taken, updated_at, account_id) VALUES ('",
-      binary_to_list(GUID), "', ",
-      float_to_list(Weight), ", '",
-      binary_to_list(DateTaken), "', now(), ", AccountId,")"
-    ]),
+  Values = ["('",
+    binary_to_list(GUID), "', ",
+    float_to_list(Weight), ", '",
+    binary_to_list(DateTaken), "', now(), ", AccountId, ")"
+  ],
 
-  {ok, Req3} = cowboy_req:reply(201, [], Req),
-  {halt, Req3, State}.
+  case Acc of
+    [] ->
+      build_query(Rows, AccountId, [Values|Acc]);
+    _ ->
+      build_query(Rows, AccountId, [[Values, ", "]|Acc])
+  end.
 
 parse(Source, 'date-time') ->
   String = binary_to_list(Source),
