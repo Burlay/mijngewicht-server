@@ -1,0 +1,33 @@
+*filter
+# Default policy DROP
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT DROP [0:0]
+
+# Allow everything localhost
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+
+# Allow already established connections
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# Allow SSH
+-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+-A OUTPUT -p tcp -m tcp --sport 22 -j ACCEPT
+
+# Allow PING
+-A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+-A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT
+-A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
+-A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+
+# Allow outbound DNS
+-A OUTPUT -p udp --dport 53 -j ACCEPT
+-A INPUT -p udp --sport 53 -j ACCEPT
+
+# Allow outbound HTTP
+-A OUTPUT -p tcp --dport 80 -j ACCEPT
+#-A INPUT -p tcp --sport 80 -j ACCEPT
+COMMIT
+

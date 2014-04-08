@@ -1,0 +1,3 @@
+- name: reload iptables
+  shell: /etc/network/if-pre-up.d/iptablesload
+  sudo: yes

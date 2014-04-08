@@ -1,0 +1,6 @@
+---
+- hosts: appservers
+  sudo: yes
+  roles:
+  - common
+  - appserver

@@ -35,75 +35,107 @@ content_types_provided(Req, State) ->
     ], Req, State}.
 
 hello_to_json(Req, State) ->
-  session:check(Req, State, fun measurement_handler:return_measurements/3).
+  lager:debug("~p/2", [?MODULE]),
+  {{IP, Port}, Req2} = cowboy_req:peer(Req),
+  {HeaderVal, Req3} = cowboy_req:header(<<"user-agent">>, Req2),
+  lager:debug("Received request from IP: ~p Port: ~p Agent: ~p", [IP, Port, HeaderVal]),
+  session:check(Req3, State, fun measurement_handler:return_measurements/3).
 
 from_json(Req, State) ->
+  lager:debug("~p/2", [?MODULE]),
   session:check(Req, State, fun measurement_handler:store_measurement/3).
 
 return_measurements(AccountId, Req, State) ->
-  Qry = [
-    "SELECT MAX(updated_at) AT TIME ZONE 'UTC' FROM measurements AS t1 ",
-    "WHERE account_id = ", AccountId
+  lager:debug("~p/3", [?MODULE]),
+  Sql = [
+    "SELECT measurement_guid, weight, to_char(date_taken AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI\"+0000\"') AS date_taken ",
+    "FROM measurements WHERE account_id = ", AccountId
   ],
 
-  case db:query([Qry]) of
-    {ok, _, [{_LastModified}]} ->
-      Sql2 = [
-        "SELECT measurement_guid, weight, to_char(date_taken AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI\"+0000\"') AS date_taken ",
-        "FROM measurements WHERE account_id = ", AccountId
-      ],
-
-      {ok, Columns, Rows} = db:query(Sql2),
-      Rawr = to_json(Columns, Rows),
+  case db:query(Sql) of
+    {ok, _, []} ->
+      lager:info("Found no measurements for AccountId: ~p", [AccountId]),
+      {ok, Req2} = cowboy_req:reply(204, [], Req),
+      {halt, Req2, State};
+    {ok, Columns, Rows} ->
+      lager:info("Found ~p measurements for AccountId: ~p", [length(Rows), AccountId]),
+      JSON = to_json(Columns, Rows),
 
       %RFC1123 = parse(LastModified, 'date-time'),
       %{ok, Req2} = cowboy_req:reply(200, [{<<"Last-Modified">>, RFC1123}], Rawr, Req),
-      {ok, Req2} = cowboy_req:reply(200, [], Rawr, Req),
-      {halt, Req2, State};
-    {ok, _, []} ->
-      io:format("OPTION@"),
-      {ok, Req2} = cowboy_req:reply(204, [], Req),
+      {ok, Req2} = cowboy_req:reply(200, [], JSON, Req),
       {halt, Req2, State}
   end.
 
 store_measurement(AccountId, Req, State) ->
+  lager:debug("~p/2", [?MODULE]),
   {ok, Body, _} = cowboy_req:body(Req),
+  {Hash, _} = cowboy_req:header(<<"content-md5">>, Req),
+  check_body_hash(Body, Hash),
   JSON = jiffy:decode(Body),
 
-  _SQLQuery = build_query(JSON, AccountId),
+  {ok, Count} = merge_measurements(JSON, AccountId),
+  lager:info("~p measurements saved in database.", [Count]),
 
-  {ok, _} = db:query(SQLQuery),
-
-  gcm:send_sync_signal(AccountId),
+  case Count > 0 of
+    true ->
+      gcm:send_sync_signal(AccountId);
+    false ->
+      ok
+  end,
 
   {ok, Req3} = cowboy_req:reply(201, [], Req),
   {halt, Req3, State}.
 
-build_query(Rows, AccountId) ->
-  build_query(Rows, AccountId, []).
+check_body_hash(Body, ClientHash) ->
+  lager:debug("~p/2", [?MODULE]),
+  lager:debug("Hash received from client ~p", [ClientHash]),
+  BodyHash = erlang:md5(Body),
+  lager:debug("Hash calculated from Boy ~p", [lists:flatten([io_lib:format("~2.16.0b", [B]) || <<B>> <=BodyHash])]).
 
-build_query([], _, []) ->
-  [];
-build_query([], _, Acc) ->
-  ["INSERT INTO measurements (measurement_guid, weight, date_taken, updated_at, account_id) VALUES ", Acc];
-build_query([Row|Rows], AccountId, Acc) ->
+merge_measurements([], _) ->
+  {error, "No records to save"};
+merge_measurements(Rows, AccountId) ->
+  merge_measurements(Rows, AccountId, 0).
+
+merge_measurements([], _, Count) ->
+  {ok, Count};
+merge_measurements([Row|Rows], AccountId, Count) ->
   {[
       {<<"guid">>, GUID},
       {<<"weight">>, Weight},
-      {<<"date_taken">>, DateTaken}
+      {<<"date_taken">>, DateTaken},
+      {<<"last_modified">>, _LastModified}
     ]} = Row,
 
-  Values = ["('",
-    binary_to_list(GUID), "', ",
-    float_to_list(Weight), ", '",
-    binary_to_list(DateTaken), "', now(), ", AccountId, ")"
-  ],
-
-  case Acc of
-    [] ->
-      build_query(Rows, AccountId, [Values|Acc]);
-    _ ->
-      build_query(Rows, AccountId, [[Values, ", "]|Acc])
+  UpdateQuery = lists:concat(["UPDATE measurements SET ",
+    "weight = ",      float_to_list(Weight),     ", ",
+    "date_taken = '", binary_to_list(DateTaken), "', ",
+    "updated_at = '", binary_to_list(_LastModified), "', ",
+    "account_id = ",  binary_to_list(AccountId), " ",
+    "WHERE measurement_guid = '", binary_to_list(GUID), "' ",
+    "AND updated_at < '", binary_to_list(_LastModified), "'"
+  ]),
+  {ok, Rawr} = db:query(UpdateQuery),
+  case Rawr of
+    1 ->
+      merge_measurements(Rows, AccountId, Count + Rawr);
+    0 ->
+      InsertQuery = lists:concat([
+          "INSERT INTO measurements (measurement_guid, weight, date_taken, updated_at, account_id) VALUES ( ",
+          "'", binary_to_list(GUID), "', ",
+          float_to_list(Weight), ", ",
+          "'", binary_to_list(DateTaken), "', ",
+          "'", binary_to_list(_LastModified), "', ",
+          binary_to_list(AccountId),
+          ")"
+        ]),
+      case db:query(InsertQuery) of
+        {ok, Rawr2} ->
+          merge_measurements(Rows, AccountId, Count + Rawr2);
+        {error, _Error} ->
+          merge_measurements(Rows, AccountId, Count)
+      end
   end.
 
 parse(Source, 'date-time') ->
@@ -112,6 +144,7 @@ parse(Source, 'date-time') ->
   httpd_util:rfc1123_date({{YYYY, MM, DD}, {HH, Min, SS}}).
 
 to_json(Columns, Rows) ->
+  lager:debug("~p/2", [?MODULE]),
   to_json(Columns, Rows, []).
 
 to_json(_, [], []) ->
@@ -120,7 +153,6 @@ to_json(_, [], Acc) ->
   ["[", [Acc], "]"];
 to_json(Columns, [Row|Rows], Acc) ->
   {GUID, Weight, DateTaken} = Row,
-  io:format("~n~n~p~n~n", [DateTaken]),
   JSON = [
     "{\"measurement_guid\":\"", GUID, "\",",
     "\"weight\":", Weight, ",",

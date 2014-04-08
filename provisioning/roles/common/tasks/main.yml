@@ -1,0 +1,8 @@
+#- name: Make sure that the /etc/firewall directory exsists
+#  action: file path=/etc/firewall state=directory
+#- name: Copy ansible inventory file to client
+#  copy: src=iptablesload dest=/etc/network/if-pre-up.d/iptablesload
+#          owner=root group=root mode=0744
+#- name: Configure iptables file
+#  template: src=iptables.rules.j2 dest=/etc/firewall/iptables.rules
+#  notify: reload iptables

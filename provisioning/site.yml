@@ -1,0 +1,4 @@
+---
+- include: dbservers.yml
+- include: dnsservers.yml
+- include: appserver.yml

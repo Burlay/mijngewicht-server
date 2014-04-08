@@ -18,21 +18,26 @@ create(Username, Password) ->
   end.
 
 check(Req, State, Fun) ->
-  case cowboy_req:cookie(<<"session">>, Req) of
-    {undefined, Req2} ->
-      {ok, Req3} = cowboy_req:reply(401, [{<<"WWW-Authenticate">>, "FormBased"}], Req2),
-      {halt, Req3, State};
-    {Session, Req2} ->
-      io:format("~n~n~p~n~n", [Session]),
+  lager:debug("~p:check/3", [?MODULE]),
+  {{IP, Port}, Req2} = cowboy_req:peer(Req),
+  case cowboy_req:cookie(<<"session">>, Req2) of
+    {undefined, Req3} ->
+      lager:debug("No Session cookie present in request from IP: ~p Port: ~p", [IP, Port]),
+      {ok, Req4} = cowboy_req:reply(401, [{<<"WWW-Authenticate">>, "FormBased"}], Req3),
+      {halt, Req4, State};
+    {Session, Req3} ->
+      lager:debug("Session cookie with ID: ~p found request from IP: ~p Port: ~p", [Session, IP, Port]),
       Sql = [
         "SELECT account_id FROM sessions WHERE session_guid = '", Session, "'"
       ],
       case db:query([Sql]) of
         {ok, _, [{AccountId}]} ->
-          Fun(AccountId, Req2, State);
+      		lager:debug("Found AccountID: ~p for sessionID: ~p", [AccountId, Session]),
+          Fun(AccountId, Req3, State);
         {ok, _, []} ->
-          {ok, Req2} = cowboy_req:reply(401, [{<<"WWW-Authenticate">>, "FormBased"}], Req),
-          {halt, Req2, State}
+      		lager:debug("Found no associated account for Session: ~p", [Session]),
+          {ok, Req4} = cowboy_req:reply(401, [{<<"WWW-Authenticate">>, "FormBased"}], Req3),
+          {halt, Req4, State}
       end
   end.
 

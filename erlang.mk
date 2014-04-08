@@ -100,7 +100,7 @@ endif
 export ERL_LIBS
 
 ERLC_OPTS ?= -Werror +debug_info +warn_export_all +warn_export_vars \
-	+warn_shadow_vars +warn_obsolete_guard # +bin_opt_info +warn_missing_spec
+	+warn_shadow_vars +warn_obsolete_guard +'{parse_transform, lager_transform}' # +bin_opt_info +warn_missing_spec
 COMPILE_FIRST ?=
 COMPILE_FIRST_PATHS = $(addprefix src/,$(addsuffix .erl,$(COMPILE_FIRST)))
 
@@ -225,7 +225,7 @@ CT_RUN = ct_run \
 	-logdir logs \
 	$(CT_OPTS)
 
-CT_SUITES ?=
+CT_SUITES ?= basic
 
 define test_target
 test_$(1): ERLC_OPTS += -DTEST=1 +'{parse_transform, eunit_autoexport}'

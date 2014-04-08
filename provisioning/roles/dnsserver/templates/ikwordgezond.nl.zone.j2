@@ -1,0 +1,15 @@
+@ IN  SOA dns1.ikwordgezond.nl. hostmaster.ikwordgezond.nl. (
+      201402240839 ; serial
+      600 ; refresh after 1 hour
+      600 ; retry after 1 hour
+      600 ; expire
+      600 ) ;
+
+  NS  dns1.ikwordgezond.nl.
+
+  A   {{ ansible_eth1.ipv4.address }}
+
+dns1  A {{ ansible_eth1.ipv4.address }}
+srv1  A {{ ansible_eth1.ipv4.address }}
+
+_sync._tcp  SRV 0 0 8080  srv1.ikwordgezond.nl.

@@ -1,0 +1,6 @@
+---
+- hosts: dnsservers
+  sudo: yes
+  roles:
+  - common
+  - dnsserver

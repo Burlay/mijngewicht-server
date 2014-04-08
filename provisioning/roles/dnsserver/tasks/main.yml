@@ -1,0 +1,13 @@
+- name: Ensure Bind9 is installed
+  apt: pkg=bind9 state=installed
+  notify:
+    - restart bind
+- name: Configure named.conf file
+  template: src=named.conf.local.j2 dest=/etc/bind/named.conf.local
+  notify:
+    - restart bind
+- name: Configure ikwordgezond zone file
+  template: src=ikwordgezond.nl.zone.j2 dest=/etc/bind/ikwordgezond.nl.zone
+    owner=bind group=bind
+  notify:
+    - restart bind

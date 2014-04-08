@@ -12,7 +12,8 @@
         ossp_uuid,
         epgsql,
         bcrypt,
-        inets
+        inets,
+        lager
     ]},
     {mod, {mijngewicht_server_app, []}},
     {env, [
@@ -23,36 +24,12 @@
         {db_port, 5432},
         {db_username, "postgres"},
         {db_password, "postgres"},
-        {db, "test"}]}
+        {db, "test"},
+{lager, [
+  {handlers, [
+    {lager_console_backend, debug},
+    {lager_file_backend, [{file, "error.log"}, {level, error}]},
+    {lager_file_backend, [{file, "console.log"}, {level, info}]}
+  ]}
+]}]}
 ]}.
-
-%{application, mijngewicht_server, [
-%    {description, "De RESTfull server voor de Mijn Gewicht app op Android!"},
-%    {vsn, "0.0.1"},
-%    {modules, []},
-%    {registered, [mijngewicht_server_sup]},
-%    {applications, [
-%        kernel,
-%        stdlib,
-%        cowboy,
-%        jiffy,
-%        ossp_uuid,
-%        epgsql,
-%        bcrypt,
-%        inets,
-%        ssl,
-%        crypto,
-%        public_key
-%    ]},
-%    {mod, {mijngewicht_server_app, []}},
-%    {env, [
-%        {hostname, "www.mijngewicht.nl"},
-%        {bind_addr, "0.0.0.0"},
-%        {bind_port, 8443},
-%        {db_addr, "192.168.2.10"},
-%        {db_port, 5432},
-%        {db_username, "postgres"},
-%        {db_password, "postgres"},
-%        {db, "test"}
-%    ]}
-%]}.

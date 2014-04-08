@@ -1,0 +1,26 @@
+#- name: Ensure PostgreSQL is installed
+#  apt: pkg=postgresql-9.1 state=installed
+- name: Install Postgresql
+  apt: pkg={{item}} state=installed
+  with_items:
+  - postgresql-9.1
+  - python-pycurl
+  - python-psycopg2
+
+- name: Copy pg_hba.conf
+  template: src=pg_hba.conf.j2 dest=/etc/postgresql/9.1/main/pg_hba.conf
+  notify: restart PostgreSQL
+
+- name: Copy postgresql.conf
+  template: src=postgresql.conf.j2 dest=/etc/postgresql/9.1/main/postgresql.conf
+  notify: restart PostgreSQL
+
+- name: Create user for app server
+  postgresql_user: name=appserver password=appserver
+  sudo: yes
+  sudo_user: postgres
+
+- name: Create the Database for the appserver
+  postgresql_db: name=ikwordgezond encoding='UTF-8' template='template0' owner=appserver state=present
+  sudo: yes
+  sudo_user: postgres

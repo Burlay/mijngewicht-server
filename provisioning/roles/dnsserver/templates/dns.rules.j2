@@ -1,0 +1,4 @@
+# Allow inbound DNS
+-A OUTPUT -p udp -o eth0 --sport 53 -j ACCEPT
+-A INPUT -p udp -i eth0 --dport 53 -j ACCEPT
+

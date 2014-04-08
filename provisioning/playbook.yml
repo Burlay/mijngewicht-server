@@ -1,0 +1,36 @@
+---
+- hosts: all
+  sudo: yes
+  tasks:
+    - name: ensure ntp is at the latest version
+      apt: pkg=ntp state=latest
+      notify:
+      - restart ntp
+    - name: Configure ntp file
+      template: src=ntp.conf.j2 dest=/etc/ntp.conf
+      tags: ntp
+      notify: restart ntp
+    - name: ensure ntp is running
+      service: name=ntp state=started
+
+    - name: ensure bind9 is at the latest version
+      apt: pkg=bind9 state=latest
+      notify:
+      - restart bind9
+    - name: ensure bind9 is running
+      service: name=bind9 state=started
+
+    - name: ensure postgresql is at the latest version
+      apt: pkg=postgresql-9.1 state=latest
+      notify:
+      - restart postgresql
+    - name: ensure postgresql is running
+      service: name=postgresql state=started
+
+  handlers:
+    - name: restart ntp
+      service: name=ntp state=restarted
+    - name: restart bind9
+      service: name=bind9 state=restarted
+    - name: restart postgresql
+      service: name=postgresql state=restarted
