@@ -225,7 +225,7 @@ CT_RUN = ct_run \
 	-logdir logs \
 	$(CT_OPTS)
 
-CT_SUITES ?= basic
+CT_SUITES ?= session
 
 define test_target
 test_$(1): ERLC_OPTS += -DTEST=1 +'{parse_transform, eunit_autoexport}'

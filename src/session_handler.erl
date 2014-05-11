@@ -1,10 +1,13 @@
 -module(session_handler).
 
+-compile([{parse_transform, lager_transform}]).
+
+-define(FUNCTION,
+  element(2, element(2, process_info(self(), current_function)))).
+
 -export([init/3]).
 -export([allowed_methods/2]).
 -export([content_types_accepted/2]).
--export([content_types_provided/2]).
--export([hello_to_json/2]).
 -export([from_json/2]).
 
 init(_Transport, _Req, []) ->
@@ -24,16 +27,8 @@ content_types_accepted(Req, State) ->
       {<<"application/json">>, from_json}
     ], Req, State}.
 
-content_types_provided(Req, State) ->
-  {[
-      {<<"application/json">>, hello_to_json}
-    ], Req, State}.
-
-hello_to_json(Req, State) ->
-  Body = <<"{\"session\": \"Hello World\"}">>,
-  {Body, Req, State}.
-
 from_json(Req, State) ->
+  _ = lager:debug("~p:~p/2", [?MODULE, ?FUNCTION]),
   {ok, Body, _} = cowboy_req:body(Req),
   {[{<<"username">>, Username},{<<"password">>, Password}]} = jiffy:decode(Body),
 
@@ -44,7 +39,7 @@ from_json(Req, State) ->
       {ok, Req3} = cowboy_req:reply(201, [{<<"Location">>, ["http://", Hostname, "/session/", SessionID]}], Req2),
       {halt, Req3, State};
     unauthorized ->
-      {ok, Req2} = cowboy_req:reply(403, [], Req),
+      {ok, Req2} = cowboy_req:reply(401, [{<<"WWW-Authenticate">>, "Woot realm=\"insert realm\""}], Req),
       {halt, Req2, State}
   end.
 

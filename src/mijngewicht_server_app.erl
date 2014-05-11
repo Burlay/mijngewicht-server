@@ -1,23 +1,25 @@
-%% Feel free to use, reuse and abuse the code in this file.
-
 %% @private
 -module(mijngewicht_server_app).
 -behaviour(application).
 
+-compile([{parse_transform, lager_transform}]).
+
 %% API.
--export([start/2]).
--export([stop/1]).
+-export([start/2,
+         stop/1]).
 
 %% API.
 
 start(_Type, _Args) ->
-  lager:start(),
-  lager:info("Starting Mijn Gewicht Synchronization server"),
+  _ = lager:start(),
+  _ = lager:info("Starting Mijn Gewicht Synchronization server"),
+  folsom:start(),
   Dispatch = cowboy_router:compile([
     {'_', [
       {"/sessions", session_handler, []},
       {"/sessions/:guid", session_handler, []},
       {"/users", user_handler, []},
+      {"/users/:guid", user_handler, []},
       {"/measurements", measurement_handler, []},
       {"/measurements/:guid", measurement_handler, []}
     ]}
@@ -34,7 +36,7 @@ start(_Type, _Args) ->
     {certfile, PrivDir ++ "/ssl/server.crt"},
     {keyfile, PrivDir ++ "/ssl/server.key"}
   ], [{env, [{dispatch, Dispatch}]}]),
-  lager:info("Servers listening on IP: ~p Port: ~p", [BindAddr,BindPort]),
+  _ = lager:info("Servers listening on IP: ~p Port: ~p", [BindAddr,BindPort]),
   mijngewicht_server_sup:start_link().
 
 stop(_State) ->

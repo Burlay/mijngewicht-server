@@ -13,23 +13,26 @@
         epgsql,
         bcrypt,
         inets,
-        lager
+        lager,
+        folsom
     ]},
     {mod, {mijngewicht_server_app, []}},
     {env, [
-        {hostname, "www.mijngewicht.nl"},
+        {hostname, "localhost:3448"},
         {bind_addr, "0.0.0.0"},
-        {bind_port, 8080},
-        {db_addr, "192.168.2.10"},
+        {bind_port, 3448},
+        {db_addr, "127.0.0.1"},
         {db_port, 5432},
-        {db_username, "postgres"},
-        {db_password, "postgres"},
-        {db, "test"},
-{lager, [
-  {handlers, [
-    {lager_console_backend, debug},
-    {lager_file_backend, [{file, "error.log"}, {level, error}]},
-    {lager_file_backend, [{file, "console.log"}, {level, info}]}
-  ]}
-]}]}
-]}.
+        {db_username, "appserver"},
+        {db_password, "appserver"},
+        {db, "ikwordgezond"},
+        {lager, [
+          {handlers, [
+            {lager_console_backend, debug},
+            {lager_file_backend, [{file, "error.log"}, {level, error}]},
+            {lager_file_backend, [{file, "console.log"}, {level, info}]}
+            ]},
+          {colored, true}
+          ]}
+        ]}
+    ]}.

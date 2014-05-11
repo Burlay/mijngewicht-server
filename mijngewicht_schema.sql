@@ -15,7 +15,7 @@ SET client_min_messages = warning;
 
 --
 -- TOC entry 178 (class 3079 OID 12617)
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner:
 --
 
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
@@ -24,7 +24,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 --
 -- TOC entry 2850 (class 0 OID 0)
 -- Dependencies: 178
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
@@ -38,7 +38,7 @@ SET default_with_oids = false;
 
 --
 -- TOC entry 170 (class 1259 OID 32768)
--- Name: accounts; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: accounts; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE accounts (
@@ -49,7 +49,7 @@ CREATE TABLE accounts (
 );
 
 
-ALTER TABLE public.accounts OWNER TO postgres;
+ALTER TABLE public.accounts OWNER TO appserver;
 
 --
 -- TOC entry 171 (class 1259 OID 32779)
@@ -64,7 +64,7 @@ CREATE SEQUENCE accounts_account_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.accounts_account_id_seq OWNER TO postgres;
+ALTER TABLE public.accounts_account_id_seq OWNER TO appserver;
 
 --
 -- TOC entry 2851 (class 0 OID 0)
@@ -77,7 +77,7 @@ ALTER SEQUENCE accounts_account_id_seq OWNED BY accounts.account_id;
 
 --
 -- TOC entry 175 (class 1259 OID 32803)
--- Name: measurements; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: measurements; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE measurements (
@@ -91,7 +91,7 @@ CREATE TABLE measurements (
 );
 
 
-ALTER TABLE public.measurements OWNER TO postgres;
+ALTER TABLE public.measurements OWNER TO appserver;
 
 --
 -- TOC entry 174 (class 1259 OID 32801)
@@ -119,7 +119,7 @@ ALTER SEQUENCE measurements_measurement_id_seq OWNED BY measurements.measurement
 
 --
 -- TOC entry 177 (class 1259 OID 49154)
--- Name: registered_devices; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: registered_devices; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE registered_devices (
@@ -129,7 +129,7 @@ CREATE TABLE registered_devices (
 );
 
 
-ALTER TABLE public.registered_devices OWNER TO postgres;
+ALTER TABLE public.registered_devices OWNER TO appserver;
 
 --
 -- TOC entry 176 (class 1259 OID 49152)
@@ -144,7 +144,7 @@ CREATE SEQUENCE registered_devices_registered_devices_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.registered_devices_registered_devices_id_seq OWNER TO postgres;
+ALTER TABLE public.registered_devices_registered_devices_id_seq OWNER TO appserver;
 
 --
 -- TOC entry 2853 (class 0 OID 0)
@@ -157,7 +157,7 @@ ALTER SEQUENCE registered_devices_registered_devices_id_seq OWNED BY registered_
 
 --
 -- TOC entry 173 (class 1259 OID 32793)
--- Name: sessions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: sessions; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE sessions (
@@ -167,7 +167,7 @@ CREATE TABLE sessions (
 );
 
 
-ALTER TABLE public.sessions OWNER TO postgres;
+ALTER TABLE public.sessions OWNER TO appserver;
 
 --
 -- TOC entry 172 (class 1259 OID 32791)
@@ -182,7 +182,7 @@ CREATE SEQUENCE sessions_session_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.sessions_session_id_seq OWNER TO postgres;
+ALTER TABLE public.sessions_session_id_seq OWNER TO appserver;
 
 --
 -- TOC entry 2854 (class 0 OID 0)
@@ -227,7 +227,7 @@ ALTER TABLE ONLY sessions ALTER COLUMN session_id SET DEFAULT nextval('sessions_
 
 --
 -- TOC entry 2716 (class 2606 OID 32790)
--- Name: pk_accounts_id; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_accounts_id; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY accounts
@@ -236,7 +236,7 @@ ALTER TABLE ONLY accounts
 
 --
 -- TOC entry 2728 (class 2606 OID 32808)
--- Name: pk_measurements_id; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_measurements_id; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY measurements
@@ -245,7 +245,7 @@ ALTER TABLE ONLY measurements
 
 --
 -- TOC entry 2732 (class 2606 OID 49159)
--- Name: pk_registered_devices; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_registered_devices; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY registered_devices
@@ -254,7 +254,7 @@ ALTER TABLE ONLY registered_devices
 
 --
 -- TOC entry 2723 (class 2606 OID 32798)
--- Name: pk_sessions_id; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_sessions_id; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY sessions
@@ -263,7 +263,7 @@ ALTER TABLE ONLY sessions
 
 --
 -- TOC entry 2718 (class 2606 OID 32774)
--- Name: u_account_guid; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: u_account_guid; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY accounts
@@ -272,7 +272,7 @@ ALTER TABLE ONLY accounts
 
 --
 -- TOC entry 2720 (class 2606 OID 32776)
--- Name: u_account_username; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: u_account_username; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY accounts
@@ -281,7 +281,7 @@ ALTER TABLE ONLY accounts
 
 --
 -- TOC entry 2730 (class 2606 OID 32810)
--- Name: u_measurements_guid; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: u_measurements_guid; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY measurements
@@ -290,7 +290,7 @@ ALTER TABLE ONLY measurements
 
 --
 -- TOC entry 2725 (class 2606 OID 32800)
--- Name: u_sessions_guid; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: u_sessions_guid; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY sessions
@@ -299,7 +299,7 @@ ALTER TABLE ONLY sessions
 
 --
 -- TOC entry 2726 (class 1259 OID 40980)
--- Name: fki_measurements_account_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: fki_measurements_account_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE INDEX fki_measurements_account_id ON measurements USING btree (account_id);
@@ -307,7 +307,7 @@ CREATE INDEX fki_measurements_account_id ON measurements USING btree (account_id
 
 --
 -- TOC entry 2721 (class 1259 OID 40974)
--- Name: fki_sessions_account_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: fki_sessions_account_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE INDEX fki_sessions_account_id ON sessions USING btree (account_id);
@@ -315,7 +315,7 @@ CREATE INDEX fki_sessions_account_id ON sessions USING btree (account_id);
 
 --
 -- TOC entry 2713 (class 1259 OID 32777)
--- Name: i_accounts_guid; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: i_accounts_guid; Type: INDEX; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE INDEX i_accounts_guid ON accounts USING btree (account_guid);
@@ -323,7 +323,7 @@ CREATE INDEX i_accounts_guid ON accounts USING btree (account_guid);
 
 --
 -- TOC entry 2714 (class 1259 OID 32778)
--- Name: i_accounts_username; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: i_accounts_username; Type: INDEX; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE INDEX i_accounts_username ON accounts USING btree (username);

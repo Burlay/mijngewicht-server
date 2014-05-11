@@ -5,7 +5,21 @@
 - name: Install build tools
   apt: pkg={{item}} state=installed
   with_items:
-    - erlang
+    - erlang-base=1:16.b.3-3
+    - erlang-diameter=1:16.b.3-3
+    - erlang-eldap=1:16.b.3-3
+    - erlang-ic-java=1:16.b.3-3
+    - erlang-src=1:16.b.3-3
+    - erlang-examples=1:16.b.3-3
+    - erlang-runtime-tools=1:16.b.3-3
+    - erlang-ssl=1:16.b.3-3
+    - erlang-syntax-tools=1:16.b.3-3
+    - erlang-asn1=1:16.b.3-3
+    - erlang-ic=1:16.b.3-3
+    - erlang-mnesia=1:16.b.3-3
+    - erlang-crypto=1:16.b.3-3
+    - erlang-public-key=1:16.b.3-3
+    - erlang=1:16.b.3-3
     - git
     - build-essential
 - name: Copy rebar

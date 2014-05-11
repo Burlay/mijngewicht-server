@@ -5,3 +5,6 @@ ebin/
 relx
 *.dump
 .erlang.mk.packages.*
+.vagrant/*
+logs/*
+priv/*

@@ -1,5 +1,10 @@
 -module(measurement_handler).
 
+-compile([{parse_transform, lager_transform}]).
+
+-define(FUNCTION,
+  element(2, element(2, process_info(self(), current_function)))).
+
 -export([
     init/3,
     allowed_methods/2,
@@ -7,7 +12,6 @@
     content_types_provided/2,
     hello_to_json/2,
     from_json/2,
-    return_measurements/3,
     store_measurement/3,
     parse/2
   ]).
@@ -34,19 +38,22 @@ content_types_provided(Req, State) ->
       {<<"application/json">>, hello_to_json}
     ], Req, State}.
 
+-spec hello_to_json(cowboy_req:req(), _) -> any().
 hello_to_json(Req, State) ->
-  lager:debug("~p/2", [?MODULE]),
-  {{IP, Port}, Req2} = cowboy_req:peer(Req),
-  {HeaderVal, Req3} = cowboy_req:header(<<"user-agent">>, Req2),
-  lager:debug("Received request from IP: ~p Port: ~p Agent: ~p", [IP, Port, HeaderVal]),
-  session:check(Req3, State, fun measurement_handler:return_measurements/3).
+  _ = lager:debug("~p:~p/2", [?MODULE,?FUNCTION]),
+  {{IP, Port}, _} = cowboy_req:peer(Req),
+  {HeaderVal, _} = cowboy_req:header(<<"user-agent">>, Req),
+  _ = lager:info("Received request from IP: ~p Port: ~p Agent: ~p", [IP, Port, HeaderVal]),
+
+  {ok, Accountid} = session:check(Req, State),
+  return_measurements(Accountid, Req, State).
 
 from_json(Req, State) ->
-  lager:debug("~p/2", [?MODULE]),
+  _ = lager:debug("~p:~p/2", [?MODULE,?FUNCTION]),
   session:check(Req, State, fun measurement_handler:store_measurement/3).
 
 return_measurements(AccountId, Req, State) ->
-  lager:debug("~p/3", [?MODULE]),
+  _ = lager:debug("~p:~p/3", [?MODULE,?FUNCTION]),
   Sql = [
     "SELECT measurement_guid, weight, to_char(date_taken AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI\"+0000\"') AS date_taken ",
     "FROM measurements WHERE account_id = ", AccountId
@@ -54,11 +61,11 @@ return_measurements(AccountId, Req, State) ->
 
   case db:query(Sql) of
     {ok, _, []} ->
-      lager:info("Found no measurements for AccountId: ~p", [AccountId]),
+      _ = lager:info("Found no measurements for AccountId: ~p", [AccountId]),
       {ok, Req2} = cowboy_req:reply(204, [], Req),
       {halt, Req2, State};
     {ok, Columns, Rows} ->
-      lager:info("Found ~p measurements for AccountId: ~p", [length(Rows), AccountId]),
+      _ = lager:info("Found ~p measurements for AccountId: ~p", [length(Rows), AccountId]),
       JSON = to_json(Columns, Rows),
 
       %RFC1123 = parse(LastModified, 'date-time'),
@@ -68,30 +75,48 @@ return_measurements(AccountId, Req, State) ->
   end.
 
 store_measurement(AccountId, Req, State) ->
-  lager:debug("~p/2", [?MODULE]),
+  _ = lager:debug("~p:~p/3", [?MODULE,?FUNCTION]),
   {ok, Body, _} = cowboy_req:body(Req),
   {Hash, _} = cowboy_req:header(<<"content-md5">>, Req),
-  check_body_hash(Body, Hash),
-  JSON = jiffy:decode(Body),
+  _ = check_body_hash(Body, Hash),
+  %%JSON = jiffy:decode(Body),
 
-  {ok, Count} = merge_measurements(JSON, AccountId),
-  lager:info("~p measurements saved in database.", [Count]),
+  %%lager:info("JSON: ~p", [JSON]),
+  case jiffy:decode(Body) of
+    {[{<<"guid">>,GUID},{<<"weight">>, Weight}, {<<"date_taken">>, DateTaken}]} ->
+      {ok, Count} = db:query([
+                              "INSERT INTO measurements (measurement_guid, weight, date_taken, updated_at, account_id) VALUES ('",
+                              binary_to_list(GUID), "', ",
+                              float_to_list(Weight), ", '",
+                              binary_to_list(DateTaken), "', now(), ", AccountId,")"
+                             ]),
 
-  case Count > 0 of
-    true ->
-      gcm:send_sync_signal(AccountId);
-    false ->
-      ok
+      case Count > 0 of
+        true ->
+          gcm:send_sync_signal(AccountId);
+        false ->
+          ok
+      end;
+    JSON ->
+      {ok, Count} = merge_measurements(JSON, AccountId),
+      _ = lager:info("~p measurements saved in database.", [Count]),
+
+      case Count > 0 of
+        true ->
+          gcm:send_sync_signal(AccountId);
+        false ->
+          ok
+      end
   end,
 
   {ok, Req3} = cowboy_req:reply(201, [], Req),
   {halt, Req3, State}.
 
 check_body_hash(Body, ClientHash) ->
-  lager:debug("~p/2", [?MODULE]),
-  lager:debug("Hash received from client ~p", [ClientHash]),
+  _ = lager:debug("~p:~p/2", [?MODULE,?FUNCTION]),
+  _ = lager:debug("Hash received from client ~p", [ClientHash]),
   BodyHash = erlang:md5(Body),
-  lager:debug("Hash calculated from Boy ~p", [lists:flatten([io_lib:format("~2.16.0b", [B]) || <<B>> <=BodyHash])]).
+  _ = lager:debug("Hash calculated from Body ~p", [lists:flatten([io_lib:format("~2.16.0b", [B]) || <<B>> <=BodyHash])]).
 
 merge_measurements([], _) ->
   {error, "No records to save"};
@@ -143,8 +168,9 @@ parse(Source, 'date-time') ->
   {ok, [YYYY, MM, DD, HH, Min, SS, _], ""} = io_lib:fread("~4d-~2d-~2d ~2d:~2d:~2d.~6d", String),
   httpd_util:rfc1123_date({{YYYY, MM, DD}, {HH, Min, SS}}).
 
+%%-spec to_json(number(), number()) -> number().
 to_json(Columns, Rows) ->
-  lager:debug("~p/2", [?MODULE]),
+  _ = lager:debug("~p:~p/2", [?MODULE,?FUNCTION]),
   to_json(Columns, Rows, []).
 
 to_json(_, [], []) ->

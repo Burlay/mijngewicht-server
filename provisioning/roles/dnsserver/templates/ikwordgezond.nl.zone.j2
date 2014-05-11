@@ -11,5 +11,6 @@
 
 dns1  A {{ ansible_eth1.ipv4.address }}
 srv1  A {{ ansible_eth1.ipv4.address }}
+api   A {{ ansible_eth1.ipv4.address }}
 
-_sync._tcp  SRV 0 0 8080  srv1.ikwordgezond.nl.
+_sync._tcp  SRV 0 0 3448  api.ikwordgezond.nl.
