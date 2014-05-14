@@ -1,7 +1,7 @@
 #- name: Ensure PostgreSQL is installed
 #  apt: pkg=postgresql-9.1 state=installed
 - name: Install Postgresql
-  apt: pkg={{item}} state=installed
+  apt: pkg={{item}} state=installed update_cache=yes
   with_items:
   - postgresql-9.1
   - python-pycurl
