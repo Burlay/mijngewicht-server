@@ -24,3 +24,6 @@
   postgresql_db: name=ikwordgezond encoding='UTF-8' template='template0' owner=appserver state=present
   sudo: yes
   sudo_user: postgres
+
+- name: Restore database schema
+  shell: PGPASSWORD=appserver psql -h localhost -U appserver -w -d ikwordgezond -f /vagrant/mijngewicht_schema.sql
