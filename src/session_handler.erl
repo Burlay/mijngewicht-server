@@ -2,9 +2,6 @@
 
 -compile([{parse_transform, lager_transform}]).
 
--define(FUNCTION,
-  element(2, element(2, process_info(self(), current_function)))).
-
 -export([init/3]).
 -export([allowed_methods/2]).
 -export([content_types_accepted/2]).
@@ -28,17 +25,20 @@ content_types_accepted(Req, State) ->
     ], Req, State}.
 
 from_json(Req, State) ->
-  _ = lager:debug("~p:~p/2", [?MODULE, ?FUNCTION]),
   {ok, Body, _} = cowboy_req:body(Req),
   {[{<<"username">>, Username},{<<"password">>, Password}]} = jiffy:decode(Body),
 
   case session:create(Username, Password) of
     {ok, SessionID} ->
+      _ = lager:info("~ts session=~ts account=~ts action=create",[<<"(^_^)／やぁ！"/utf8>>, SessionID, Username]),
+      _ = folsom_metrics:notify({login_succes, {inc, 1}}),
       {ok, Hostname} = application:get_env(mijngewicht_server, hostname),
       Req2 = cowboy_req:set_resp_cookie("session", SessionID, [], Req),
       {ok, Req3} = cowboy_req:reply(201, [{<<"Location">>, ["http://", Hostname, "/session/", SessionID]}], Req2),
       {halt, Req3, State};
     unauthorized ->
+      _ = lager:info("~ts session=failed account=~ts",[<<"(。_°☆＼(- -)バシっ!"/utf8>>, Username]),
+      _ = folsom_metrics:notify({login_failed, {inc, 1}}),
       {ok, Req2} = cowboy_req:reply(401, [{<<"WWW-Authenticate">>, "Woot realm=\"insert realm\""}], Req),
       {halt, Req2, State}
   end.
