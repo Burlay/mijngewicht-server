@@ -1,10 +1,6 @@
-%% -*- coding: utf-8 -*-
 -module(user_handler).
 
 -compile([{parse_transform, lager_transform}]).
-
--define(FUNCTION,
-  element(2, element(2, process_info(self(), current_function)))).
 
 -export([init/3]).
 -export([allowed_methods/2]).
@@ -38,20 +34,19 @@ content_types_provided(Req, State) ->
     ], Req, State}.
 
 hello_to_json(Req, State) ->
-  _ = lager:debug("~p:~p/2", [?MODULE, ?FUNCTION]),
   Body = <<"{\"session\": \"Hello World\"}">>,
   {Body, Req, State}.
 
 from_json(Req, State) ->
-  _ = lager:debug("~p:~p/2", [?MODULE, ?FUNCTION]),
   {ok, Body, _} = cowboy_req:body(Req),
   {Json} = jiffy:decode(Body),
   Username = proplists:get_value(<<"username">>, Json),
   Password = proplists:get_value(<<"password">>, Json),
 
-  _ = lager:info("Creating new user account ~p", [Username]),
   case account:create(Username, Password) of
     {ok, UserId} ->
+      _ = lager:info("~ts account=~ts action=create", [<<"*✧₊✪͡◡ू✪͡"/utf8>>, UserId]),
+      _ = folsom_metrics:notify({accounts_created, {inc, 1}}),
       {ok, Hostname} = application:get_env(mijngewicht_server, hostname),
       {ok, Req2} = cowboy_req:reply(201, [{<<"Location">>, "https://" ++ Hostname ++ "/users/" ++ UserId}], Req),
       {halt, Req2, State};
