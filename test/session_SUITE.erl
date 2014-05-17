@@ -38,5 +38,5 @@ can_create_new_user(_Config) ->
   Location = proplists:get_value("location", Headers),
 
   %% Check that we can delete a user.
-  {ok, Result} = httpc:request(delete, {Location, [], "application/json", []}, [], []).
+  {ok, {{"HTTP/1.1",204,"No Content"}, _, _}} = httpc:request(delete, {Location, [], "application/json", []}, [], []).
 

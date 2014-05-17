@@ -1,3 +1,4 @@
+%% -*- coding: utf-8 -*-
 -module(user_handler).
 
 -compile([{parse_transform, lager_transform}]).
@@ -60,5 +61,9 @@ from_json(Req, State) ->
   end.
 
 delete_resource(Req, State) ->
-  _ = lager:debug("~p:~p/2", [?MODULE, ?FUNCTION]),
+  {GUID, _} = cowboy_req:binding(guid, Req),
+  SQL = ["DELETE FROM accounts WHERE account_guid = '", GUID, "'"],
+  {ok, _} = db:query(SQL),
+  _ = folsom_metrics:notify({accounts_deleted, {inc, 1}}),
+  _ = lager:info("~ts account=~ts action=delete",[<<"(ノಠ益ಠ)ノ彡┻━┻"/utf8>>, GUID]),
   {true, Req, State}.
