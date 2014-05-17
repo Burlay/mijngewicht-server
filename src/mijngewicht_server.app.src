@@ -25,14 +25,6 @@
         {db_port, 5432},
         {db_username, "appserver"},
         {db_password, "appserver"},
-        {db, "ikwordgezond"},
-        {lager, [
-          {handlers, [
-            {lager_console_backend, debug},
-            {lager_file_backend, [{file, "error.log"}, {level, error}]},
-            {lager_file_backend, [{file, "console.log"}, {level, info}]}
-            ]},
-          {colored, true}
-          ]}
+        {db, "ikwordgezond"}
         ]}
     ]}.
