@@ -28,16 +28,13 @@ end_per_suite(Config) ->
 can_create_new_user(_Config) ->
   URL = "https://localhost:3448/users/",
   Body = "{\"username\":\"test\",\"password\":\"test\"}",
-  {ok, Result} = httpc:request(post, {URL, [], "application/json", Body}, [], []),
 
-  %% Check that we can create a user.
-  {{"HTTP/1.1", 201, "Created"}, Headers, []} = Result,
+  %% Check that we can create a new user
+  {ok, {{"HTTP/1.1", 201, "Created"}, Headers, []}} = httpc:request(post, {URL, [], "application/json", Body}, [], []),
+  Location = proplists:get_value("location", Headers),
 
   %% Check that we can not use the same e-mail again
-  {ok, Result2} = httpc:request(post, {URL, [], "application/json", Body}, [], []),
-  {{"HTTP/1.1",409,"Conflict"}, _, _} = Result2,
-
-  Location = proplists:get_value("location", Headers),
+  {ok, {{"HTTP/1.1",409,"Conflict"}, _, _}} = httpc:request(post, {URL, [], "application/json", Body}, [], []),
 
   %% Check that we can delete a user.
   {ok, {{"HTTP/1.1",204,"No Content"}, _, _}} = httpc:request(delete, {Location, [], "application/json", []}, [], []).

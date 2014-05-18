@@ -2,9 +2,6 @@
 
 -compile([{parse_transform, lager_transform}]).
 
--define(FUNCTION,
-  element(2, element(2, process_info(self(), current_function)))).
-
 -export([
     init/3,
     allowed_methods/2,
@@ -40,7 +37,6 @@ content_types_provided(Req, State) ->
 
 -spec hello_to_json(cowboy_req:req(), _) -> any().
 hello_to_json(Req, State) ->
-  _ = lager:debug("~p:~p/2", [?MODULE,?FUNCTION]),
   {{IP, Port}, _} = cowboy_req:peer(Req),
   {HeaderVal, _} = cowboy_req:header(<<"user-agent">>, Req),
   _ = lager:info("Received request from IP: ~p Port: ~p Agent: ~p", [IP, Port, HeaderVal]),
@@ -49,11 +45,9 @@ hello_to_json(Req, State) ->
   return_measurements(Accountid, Req, State).
 
 from_json(Req, State) ->
-  _ = lager:debug("~p:~p/2", [?MODULE,?FUNCTION]),
   session:check(Req, State, fun measurement_handler:store_measurement/3).
 
 return_measurements(AccountId, Req, State) ->
-  _ = lager:debug("~p:~p/3", [?MODULE,?FUNCTION]),
   Sql = [
     "SELECT measurement_guid, weight, to_char(date_taken AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI\"+0000\"') AS date_taken ",
     "FROM measurements WHERE account_id = ", AccountId
@@ -75,13 +69,10 @@ return_measurements(AccountId, Req, State) ->
   end.
 
 store_measurement(AccountId, Req, State) ->
-  _ = lager:debug("~p:~p/3", [?MODULE,?FUNCTION]),
   {ok, Body, _} = cowboy_req:body(Req),
   {Hash, _} = cowboy_req:header(<<"content-md5">>, Req),
   _ = check_body_hash(Body, Hash),
-  %%JSON = jiffy:decode(Body),
 
-  %%lager:info("JSON: ~p", [JSON]),
   case jiffy:decode(Body) of
     {[{<<"guid">>,GUID},{<<"weight">>, Weight}, {<<"date_taken">>, DateTaken}]} ->
       {ok, Count} = db:query([
@@ -91,6 +82,8 @@ store_measurement(AccountId, Req, State) ->
                               binary_to_list(DateTaken), "', now(), ", AccountId,")"
                              ]),
 
+      _ = lager:info("~ts measurements_saved=~p", [<<"..._〆(・∀・＠)"/utf8>>, Count]),
+      _ = folsom_metrics:notify(measurements_created, {inc, Count}),
       case Count > 0 of
         true ->
           gcm:send_sync_signal(AccountId);
@@ -99,7 +92,8 @@ store_measurement(AccountId, Req, State) ->
       end;
     JSON ->
       {ok, Count} = merge_measurements(JSON, AccountId),
-      _ = lager:info("~p measurements saved in database.", [Count]),
+      _ = lager:info("~ts measurements_saved=~p", [<<"..._〆(・∀・＠)"/utf8>>, Count]),
+      _ = folsom_metrics:notify(measurements_created, {inc, Count}),
 
       case Count > 0 of
         true ->
@@ -113,7 +107,6 @@ store_measurement(AccountId, Req, State) ->
   {halt, Req3, State}.
 
 check_body_hash(Body, ClientHash) ->
-  _ = lager:debug("~p:~p/2", [?MODULE,?FUNCTION]),
   _ = lager:debug("Hash received from client ~p", [ClientHash]),
   BodyHash = erlang:md5(Body),
   _ = lager:debug("Hash calculated from Body ~p", [lists:flatten([io_lib:format("~2.16.0b", [B]) || <<B>> <=BodyHash])]).
@@ -170,7 +163,6 @@ parse(Source, 'date-time') ->
 
 %%-spec to_json(number(), number()) -> number().
 to_json(Columns, Rows) ->
-  _ = lager:debug("~p:~p/2", [?MODULE,?FUNCTION]),
   to_json(Columns, Rows, []).
 
 to_json(_, [], []) ->
