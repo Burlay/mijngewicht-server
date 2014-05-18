@@ -14,7 +14,12 @@
         bcrypt,
         inets,
         lager,
-        folsom
+        folsom,
+        snmp,
+        mnesia,
+        sasl,
+        os_mon,
+        otp_mibs
     ]},
     {mod, {mijngewicht_server_app, []}},
     {env, [

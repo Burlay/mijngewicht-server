@@ -8,3 +8,4 @@ relx
 .vagrant/*
 logs/*
 priv/*
+snmp/agent/db/*

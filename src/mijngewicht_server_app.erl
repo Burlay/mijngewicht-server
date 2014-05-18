@@ -14,6 +14,8 @@ start(_Type, _Args) ->
   _ = lager:start(),
   _ = lager:info("Starting Mijn Gewicht Synchronization server"),
   folsom:start(),
+  otp_mib:load(snmp_master_agent),
+  os_mon_mib:load(snmp_master_agent),
   Dispatch = cowboy_router:compile([
     {'_', [
       {"/sessions", session_handler, []},
