@@ -33,11 +33,17 @@ start(_Type, _Args) ->
 
   PrivDir = code:priv_dir(mijngewicht_server),
   {ok, _} = cowboy:start_https(https, 100, [
-    {ip, IP},
-    {port, BindPort},
-    {certfile, PrivDir ++ "/ssl/server.crt"},
-    {keyfile, PrivDir ++ "/ssl/server.key"}
-  ], [{env, [{dispatch, Dispatch}]}]),
+      {ip, IP},
+      {port, BindPort},
+      {certfile, PrivDir ++ "/ssl/server.crt"},
+      {keyfile, PrivDir ++ "/ssl/server.key"}
+    ],
+    [
+     {env, [{dispatch, Dispatch}]},
+     {onrequest, fun iwg_mgmt:on_request/1},
+     {onresponse, fun iwg_mgmt:on_response/4}
+    ]
+  ),
   _ = lager:info("Servers listening on IP: ~p Port: ~p", [BindAddr,BindPort]),
   mijngewicht_server_sup:start_link().
 

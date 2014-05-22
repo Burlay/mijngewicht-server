@@ -335,7 +335,7 @@ CREATE INDEX i_accounts_username ON accounts USING btree (username);
 --
 
 ALTER TABLE ONLY measurements
-    ADD CONSTRAINT fk_measurements_account_id FOREIGN KEY (account_id) REFERENCES accounts(account_id);
+    ADD CONSTRAINT fk_measurements_account_id FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE;
 
 
 --
@@ -344,7 +344,7 @@ ALTER TABLE ONLY measurements
 --
 
 ALTER TABLE ONLY registered_devices
-    ADD CONSTRAINT fk_registered_devices_accounts FOREIGN KEY (account_id) REFERENCES accounts(account_id);
+    ADD CONSTRAINT fk_registered_devices_accounts FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE;
 
 
 --
@@ -353,7 +353,7 @@ ALTER TABLE ONLY registered_devices
 --
 
 ALTER TABLE ONLY sessions
-    ADD CONSTRAINT fk_sessions_account_id FOREIGN KEY (account_id) REFERENCES accounts(account_id);
+    ADD CONSTRAINT fk_sessions_account_id FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE;
 
 
 --
