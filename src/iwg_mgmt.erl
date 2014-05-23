@@ -9,7 +9,9 @@ on_request(Req) ->
   statistics(runtime),
   statistics(wall_clock),
   folsom_metrics:notify({requests, {inc, 1}}),
-  Req.
+  {Length, Req2} = cowboy_req:body_length(Req),
+  folsom_metrics:notify({request_size, Length}),
+  Req2.
 
 on_response(_, _, _, Req) ->
   {_, Runtime} = statistics(runtime),
