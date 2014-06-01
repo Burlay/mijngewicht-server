@@ -45,7 +45,7 @@ from_json(Req, State) ->
 
   case account:create(Username, Password) of
     {ok, UserId} ->
-      _ = lager:info("~ts account=~ts action=create", [<<"*✧₊✪͡◡ू✪͡"/utf8>>, UserId]),
+      _ = lager:info("[account] action=create account=~ts", [UserId]),
       _ = folsom_metrics:notify({accounts_created, {inc, 1}}),
       {ok, Hostname} = application:get_env(mijngewicht_server, hostname),
       {ok, Req2} = cowboy_req:reply(201, [{<<"Location">>, "https://" ++ Hostname ++ "/users/" ++ UserId}], Req),
@@ -60,5 +60,5 @@ delete_resource(Req, State) ->
   SQL = ["DELETE FROM accounts WHERE account_guid = '", GUID, "'"],
   {ok, _} = db:query(SQL),
   _ = folsom_metrics:notify({accounts_deleted, {inc, 1}}),
-  _ = lager:info("~ts account=~ts action=delete",[<<"(ノಠ益ಠ)ノ彡┻━┻"/utf8>>, GUID]),
+  _ = lager:info("[account] action=delete account=~ts",[GUID]),
   {true, Req, State}.
