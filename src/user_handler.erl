@@ -45,12 +45,13 @@ from_json(Req, State) ->
 
   case account:create(Username, Password) of
     {ok, UserId} ->
-      _ = lager:info("[account] action=create account=~ts", [UserId]),
+      _ = lager:info("[account] action=create username=~ts", [Username]),
       _ = folsom_metrics:notify({accounts_created, {inc, 1}}),
       {ok, Hostname} = application:get_env(mijngewicht_server, hostname),
       {ok, Req2} = cowboy_req:reply(201, [{<<"Location">>, "https://" ++ Hostname ++ "/users/" ++ UserId}], Req),
       {halt, Req2, State};
     {error, "username exists"} ->
+      _ = lager:info("[account] action=create username=~ts error=username_exists", [Username]),
       {ok, Req2} = cowboy_req:reply(409, [], Req),
       {halt, Req2, State}
   end.

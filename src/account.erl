@@ -29,7 +29,6 @@ create(Username, Password) ->
       _ = lager:debug("[SQL] query=~s count=~p", [Query, Result]),
       {ok, GUID};
     {error, {error, error, <<"23505">>, <<"duplicate key value violates unique constraint \"u_account_username\"">>, _}} ->
-      _ = lager:debug("error=~p", ["username already exists"]),
       {error, "username exists"}
   end.
 
