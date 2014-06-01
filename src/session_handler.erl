@@ -30,14 +30,14 @@ from_json(Req, State) ->
 
   case session:create(Username, Password) of
     {ok, SessionID} ->
-      _ = lager:info("~ts session=~ts account=~ts action=create",[<<"(^_^)／やぁ！"/utf8>>, SessionID, Username]),
+      _ = lager:info("[auth] result=succes session=~ts account=~ts",[SessionID, Username]),
       _ = folsom_metrics:notify({login_succes, {inc, 1}}),
       {ok, Hostname} = application:get_env(mijngewicht_server, hostname),
       Req2 = cowboy_req:set_resp_cookie("session", SessionID, [], Req),
       {ok, Req3} = cowboy_req:reply(201, [{<<"Location">>, ["http://", Hostname, "/session/", SessionID]}], Req2),
       {halt, Req3, State};
     unauthorized ->
-      _ = lager:info("~ts session=failed account=~ts",[<<"(。_°☆＼(- -)バシっ!"/utf8>>, Username]),
+      _ = lager:info("[auth] result=failed account=~ts",[Username]),
       _ = folsom_metrics:notify({login_failed, {inc, 1}}),
       {ok, Req2} = cowboy_req:reply(401, [{<<"WWW-Authenticate">>, "Woot realm=\"insert realm\""}], Req),
       {halt, Req2, State}
