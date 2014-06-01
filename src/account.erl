@@ -2,16 +2,10 @@
 
 -compile([{parse_transform, lager_transform}]).
 
--define(FUNCTION,
-  element(2, element(2, process_info(self(), current_function)))).
--define(ARITY,
-  element(3, element(2, process_info(self(), current_function)))).
-
 -export([create/2]).
 
 -spec create(binary(), binary()) -> {ok, binary()} | {error, binary()}.
 create(Username, Password) ->
-  _ =  lager:debug("~p:~p/~p", [?MODULE, ?FUNCTION, ?ARITY]),
   %% Create database connection
   {ok, DbAddr} = application:get_env(mijngewicht_server, db_addr),
   {ok, DbUser} = application:get_env(mijngewicht_server, db_username),
@@ -32,7 +26,7 @@ create(Username, Password) ->
           ],
   case pgsql:squery(C, Query) of
     {ok, Result} ->
-      _ = lager:debug("Query results: ~p", [Result]),
+      _ = lager:debug("[SQL] query=~s count=~p", [Query, Result]),
       {ok, GUID};
     {error, {error, error, <<"23505">>, <<"duplicate key value violates unique constraint \"u_account_username\"">>, _}} ->
       _ = lager:debug("error=~p", ["username already exists"]),
