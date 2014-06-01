@@ -82,7 +82,7 @@ store_measurement(AccountId, Req, State) ->
                               binary_to_list(DateTaken), "', now(), ", AccountId,")"
                              ]),
 
-      _ = lager:info("~ts measurements_saved=~p", [<<"..._〆(・∀・＠)"/utf8>>, Count]),
+      _ = lager:info("[measurement] action=create count=~p", [Count]),
       _ = folsom_metrics:notify(measurements_created, {inc, Count}),
       case Count > 0 of
         true ->
@@ -92,7 +92,7 @@ store_measurement(AccountId, Req, State) ->
       end;
     JSON ->
       {ok, Count} = merge_measurements(JSON, AccountId),
-      _ = lager:info("~ts measurements_saved=~p", [<<"..._〆(・∀・＠)"/utf8>>, Count]),
+      _ = lager:info("[measurement] action=create count=~p", [Count]),
       _ = folsom_metrics:notify(measurements_created, {inc, Count}),
 
       case Count > 0 of
