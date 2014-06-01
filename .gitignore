@@ -9,3 +9,4 @@ relx
 logs/*
 priv/*
 snmp/agent/db/*
+*.plt
